@@ -265,17 +265,24 @@ _TODO:_ It is important to know why we want to measure certain metrics for our c
 - Error Rate: This metric measures the percentage of requests that result in an error (e.g., HTTP 5xx status codes).
 - Latency Distribution: This metric provides a detailed view of response times across different percentiles (e.g., 50th, 75th, 90th, 99th percentiles).
 
-### Create a Dashboard to measure our SLIs
+## Create a Dashboard to measure our SLIs
 
 _TODO:_ Create a dashboard to measure the uptime of the frontend and backend services We will also want to measure to measure 40x and 50x errors. Create a dashboard that show these values over a 24 hour period and take a screenshot.
 
-### Uptime
+## Uptime
 
 The below Metrics command is used to create Uptime dashboard
 
-`sum(up{container=~"backend|frontend"}) by(pod)`
+```
+up{job="frontend"}
+up{job="backend"}
+sum(rate(http_requests_total{job="frontend", status=~"4.."}[1m]))
+sum(rate(http_requests_total{job="backend", status=~"4.."}[1m]))
+sum(rate(http_requests_total{job="frontend", status=~"5.."}[1m]))
+sum(rate(http_requests_total{job="backend", status=~"5.."}[1m]))
+```
 
-## Report Error
+# Report Error
 
 _TODO:_ Using the template below, write a trouble ticket for the developers, to explain the errors that we are seeing (400, 500, latency) and to let them know the file that is causing the issue.
 
@@ -283,11 +290,11 @@ _TODO:_ Using the template below, write a trouble ticket for the developers, to 
   - Name: 500 Internal Server Error
   - Date: 07-24-2024
   - Subject: Internal Server Error
-  - Affected Area: The trial application
+  - Affected Area: The application
   - Severity: High
-  - Description: The server encountered status 500 (Internal server error) and currently unable to complete request."
+  - Description: The server encountered status 500 (Internal server error) and currently unable to complete request.
 
-## Creating SLIs and SLOs
+# Creating SLIs and SLOs
 
 _TODO:_ We want to create an SLO guaranteeing that our application has a 99.95% uptime per month. Name three SLIs that we would use to measure the success of this SLO.
 
@@ -296,3 +303,7 @@ To ensure our application meets a Service Level Objective (SLO) guaranteeing 99.
 1. Uptime Percentage: Directly indicates service availability, helping us ensure we meet the 99.95% uptime SLO.
 2. Mean Time to Recovery (MTTR): Indicates the efficiency of incident response, helping ensure quick recovery from outages.
 3. Number of Incidents: Provides insight into the frequency of service disruptions, highlighting stability issues.
+4. Average Number of Requests per Minute (for traffic): Helps in capacity planning and understanding traffic patterns to optimize performance.
+5. Percentage of Request Response Time < 250ms (for latency): Ensures that the application is responsive and meets performance expectations.
+6. Application Producing 5xx Status Codes < 1% (for reliability): Helps identify and fix server-side issues that impact user experience.
+7. Service Downtime < 0.001% (for availability): Drives efforts to minimize downtime through redundancy, robust architecture, and proactive monitoring.
