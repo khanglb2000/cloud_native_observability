@@ -12,10 +12,12 @@ _TODO:_ run `kubectl` command to show the running pods and services for all comp
 ## Setup the Jaeger and Prometheus source
 
 _TODO:_ Expose Grafana to the internet and then setup Prometheus as a data source. Provide a screenshot of the home page after logging into Grafana.
+![Grafana](answer-imgs/login-grafana-success.png)
 
 ## Create a Basic Dashboard
 
 _TODO:_ Create a dashboard in Grafana that shows Prometheus as a source. Take a screenshot and include it here.
+![Dashboard](answer-imgs/dashboard-prometheus.png)
 
 ## Main Steps
 
