@@ -188,12 +188,14 @@ kubectl get pods -n svc
 
 ```
 
-kubectl port-forward -n monitoring svc/promethus-kube-promethus-promethus 9090:9090
+kubectl port-forward -n monitoring svc/prometheus-kube-prometheus-prometheus 9090:9090 --address 0.0.0.0
 
 ```
 
 - In browser navigate to `https://127.0.0.1:9090/targets`
 - All the services should be in `UP` status
+
+![Prometheus](answer-imgs/prometheus.png)
 
 ## Step 5: Install Jaeger
 
@@ -202,7 +204,7 @@ kubectl port-forward -n monitoring svc/promethus-kube-promethus-promethus 9090:9
 
 ```
 
-kubectl apply -f jaeger.yaml -n obervability
+kubectl apply -f jaeger.yaml -n observability
 
 ```
 
@@ -225,9 +227,9 @@ kubectl get jaegers -n observability
 
 ```
 
-kubectl get pods -n obervability -l=app="jaeger" -o name
+kubectl get pods -n observability -l=app="jaeger" -o name
 #copy the ouput
-kubectl port-forward -n observability output(pod/simplest-xxx) 16686:16686
+kubectl port-forward -n observability output(pod/simplest-xxx) 8888:16686 --address 0.0.0.0
 
 ```
 
@@ -237,11 +239,13 @@ kubectl port-forward -n observability output(pod/simplest-xxx) 16686:16686
 ```
 
 ingress_name=$(kubectl get -n observability ingress -o jsonpath='{.items[0].metadata.name}'); \
-    ingress_port=$(kubectl get -n observability ingress -o jsonpath='{.items[0].spec.defaultBackend.service.port.number}'); \
- echo -e "\n\n${ingress_name}.observability.svc.cluster.local:${ingress_port}"
+ingress_port=$(kubectl get -n observability ingress -o jsonpath='{.items[0].spec.defaultBackend.service.port.number}'); \
+echo -e "\n\n${ingress_name}.observability.svc.cluster.local:${ingress_port}"
 #Copy the output
 
 ```
+
+![Jeager](answer-imgs/jeager.png)
 
 ## Step 7: Adding the Data Source
 
@@ -255,9 +259,13 @@ ingress_name=$(kubectl get -n observability ingress -o jsonpath='{.items[0].meta
 
 - In Jaeger UI under service option select the service that need to be traced(service) and click on `Find Traces`
 
+![Tracing](answer-imgs/jeager-tracing.png)
+
 ## Step 9 : Todo in README
 
 ### Verify the monitoring installation
+
+![Dashboard](answer-imgs/SLO.png)
 
 ### Describe SLO/SLI
 
@@ -305,7 +313,7 @@ _TODO:_ Using the template below, write a trouble ticket for the developers, to 
 
 - TROUBLE TICKET
   - Name:404 Not Found on backend service
-  - Date: 13-11-2021
+  - Date: 24-07-2024
   - Subject: API endpoint not found
   - Affected Area: Backend service
   - Severity: HIGH
