@@ -4,6 +4,19 @@
 
 In this project, we will create dashboards that use multiple graphs to monitor our sample application that is deployed on a Kubernetes cluster. We will be using [Prometheus](https://prometheus.io/), [Jaeger](https://www.jaegertracing.io/), and [Grafana](https://grafana.com/) in order to monitor, trace and visualize your experience.
 
+## Verify the monitoring installation
+
+_TODO:_ run `kubectl` command to show the running pods and services for all components. Take a screenshot of the output and include it here to verify the installation
+![Pods and Services](answer-imgs/deploying-the-application.png)
+
+## Setup the Jaeger and Prometheus source
+
+_TODO:_ Expose Grafana to the internet and then setup Prometheus as a data source. Provide a screenshot of the home page after logging into Grafana.
+
+## Create a Basic Dashboard
+
+_TODO:_ Create a dashboard in Grafana that shows Prometheus as a source. Take a screenshot and include it here.
+
 ## Main Steps
 
 Here are the main steps we'll carry out for this project:
