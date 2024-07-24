@@ -71,9 +71,7 @@ vagrant ssh
 
 1. We want to create the monitoring namespace
 
-```
-kubectl create namespace monitoring
-```
+`kubectl create namespace monitoring`
 
 2. Now, let's install Grafana and Prometheus
 
@@ -87,9 +85,7 @@ helm install prometheus prometheus-community/kube-prometheus-stack --namespace m
 
 3. Verify that it installed
 
-```
-kubectl get pods,svc --namespace=monitoring
-```
+`kubectl get pods,svc --namespace=monitoring`
 
 ## 2.3: Install Jaeger
 
@@ -116,7 +112,6 @@ sudo kubectl create -n observability -f https://raw.githubusercontent.com/jaeger
 ```
 kubectl create -f https://raw.githubusercontent.com/jaegertracing/jaeger-operator/${jaeger_version}/deploy/cluster_role.yaml
 kubectl create -f https://raw.githubusercontent.com/jaegertracing/jaeger-operator/${jaeger_version}/deploy/cluster_role_binding.yaml
-
 ```
 
 Great! We have installed Jaeger, Prometheus, and Grafana. We are now ready to work!
@@ -134,11 +129,7 @@ Great! We have installed Jaeger, Prometheus, and Grafana. We are now ready to wo
 - Navigate to `sample-app/manifests` in the files directory
 - Run the below command to install the application
 
-```
-
-kubectl apply -f app/
-
-```
+`kubectl apply -f app/`
 
 ## 3.2: Exposing Grafana
 
@@ -155,10 +146,8 @@ kubectl apply -f app/
 - When installing via the Prometheus Helm chart, the default Grafana credentials are:
 
 ```
-
 username: admin
 password: prom-operator
-
 ```
 
 ## 3.3: Exposing the application
@@ -166,11 +155,7 @@ password: prom-operator
 - Similar to Grafana, our frontend needs to be exposed to the internet. Be sure to open a new session in either a new terminal tab or terminal window so we can do another `kubectl port-forward`
 - Run the below command to expose the application
 
-```
-
-kubectl port-forward svc/frontend-service 8080:8080
-
-```
+`kubectl port-forward svc/frontend-service 8080:8080`
 
 - In the web browser navigate to `localhost:8080`
 
@@ -178,19 +163,11 @@ kubectl port-forward svc/frontend-service 8080:8080
 
 - Run the below command and copy the 1st running service.
 
-```
-
-kubectl get pods -n svc
-
-```
+`kubectl get pods -n svc`
 
 - Run the port-forward command
 
-```
-
-kubectl port-forward -n monitoring svc/prometheus-kube-prometheus-prometheus 9090:9090 --address 0.0.0.0
-
-```
+`kubectl port-forward -n monitoring svc/prometheus-kube-prometheus-prometheus 9090:9090 --address 0.0.0.0`
 
 - In browser navigate to `https://127.0.0.1:9090/targets`
 - All the services should be in `UP` status
@@ -202,23 +179,16 @@ kubectl port-forward -n monitoring svc/prometheus-kube-prometheus-prometheus 909
 - create [jaeger.yaml](https://github.com/Harini-Pavithra/Cloud-Native-Application-Architecture-Nanodegree/blob/main/Building%20a%20Metrics%20Dashboard/manifests/app/jaeger.yaml)
 - Run the below command to install Jaeger services
 
-```
-
-kubectl apply -f jaeger.yaml -n observability
-
-```
+`kubectl apply -f jaeger.yaml -n observability`
 
 The command above will create a Jaeger instance with the name simplest in the observability namespace. we can verify using:
 
 ```
-
 # Should return ‘simplest’
 
 # Run either one of the following
-
 kubectl get deployment -n observability
 kubectl get jaegers -n observability
-
 ```
 
 ## Step 6: Accessing the service
@@ -226,23 +196,19 @@ kubectl get jaegers -n observability
 - Run the below commands to access the Jaeger service
 
 ```
-
 kubectl get pods -n observability -l=app="jaeger" -o name
 #copy the ouput
 kubectl port-forward -n observability output(pod/simplest-xxx) 8888:16686 --address 0.0.0.0
-
 ```
 
 - In the browser navigate to `https://127.0.0.1/16686`
 - Run the below command to verify ingress ports
 
 ```
-
 ingress_name=$(kubectl get -n observability ingress -o jsonpath='{.items[0].metadata.name}'); \
 ingress_port=$(kubectl get -n observability ingress -o jsonpath='{.items[0].spec.defaultBackend.service.port.number}'); \
 echo -e "\n\n${ingress_name}.observability.svc.cluster.local:${ingress_port}"
 #Copy the output
-
 ```
 
 ![Jeager](answer-imgs/jeager.png)
@@ -271,27 +237,33 @@ echo -e "\n\n${ingress_name}.observability.svc.cluster.local:${ingress_port}"
 
 _TODO:_ Describe, in own words, what the SLIs are, based on an SLO of _monthly uptime_ and _request response time_.
 
+### SLI
+
+- Service Level Indicators (SLIs) are specific, quantifiable measurements used to assess the performance of a service. They provide objective data points that can be used to determine whether a service is meeting its Service Level Objectives (SLOs). SLIs are the metrics or key performance indicators (KPIs) that track the actual performance of various aspects of a service.
+
 ### SLO
 
-- A Service-Level Objective (SLO) is a measurable goal set by the SRE team to ensure a standard level of performance during a specified period of time.
-- When creating an SLO, it is important to be customer-centric. If we keep user experience and expectations at the center of our planning, we will have a strong SLO strategy. A common way to make sure we are customer-centered in our strategy is to map out a user journey for the application.
-  SLI.
-- A Service-Level Indicator (SLI) is a specific metric used to measure the performance of a service.
-- For example, suppose that our team has the following SLO:The application will have an uptime of 99.9% during the next year. In this case,our SLI would be the actual measurement of the uptime. Perhaps during that year,we actually achieved 99.5% uptime or 97.3% uptime. These measurements are our SLIs—they indicate the level of performance our service actually exhibited, and show us whether we achieved our SLO
+# SLO: Monthly Uptime
+
+- SLO Description: This SLO specifies the desired availability of a service over a month. For example, an SLO might state that the service should be available 99.9% of the time each month.
+- Related SLI: The SLI for this SLO would be the percentage of uptime over the course of a month. It is calculated by measuring the total time the service was available and operational, divided by the total time in the month, multiplied by 100 to get a percentage.
+- Example SLI: If a service is up for 43,200 minutes out of 43,200 minutes in a 30-day month, the uptime SLI would be 100%. If it was up for 43,157 minutes, the uptime SLI would be approximately 99.9%.
+
+# SLO: Request Response Time
+
+-SLO Description: This SLO defines the acceptable response time for requests made to the service. For example, an SLO might specify that 95% of requests should be served within 200 milliseconds.
+-Related SLI: The SLI for this SLO would be the response time of requests. Specifically, it could be the 95th percentile response time, meaning the response time below which 95% of all requests fall.
+-Example SLI: If over the course of a month, 95% of requests are completed in less than 200 milliseconds, then the service is meeting its response time SLO. The SLI would be the time (in milliseconds) that 95% of requests are completed within.
 
 ## Creating SLI metrics.
 
 _TODO:_ It is important to know why we want to measure certain metrics for our customer. Describe in detail 5 metrics to measure these SLIs.
 
-- Latency: The amount of time it takes from when a request is made by the user to the time it takes for the response to get back to that user.
-
-- Failure Rate: The percentage of requests that are failing.
-
-- Throughout: The requests received per second.
-
-- Uptime: The percentage of system availability during a defined period.
-
-- Traffic: The amount of stress on a system from demand.
+- Uptime Percentage: This metric measures the percentage of time the service is available and operational over a specified period, typically a month.
+- Mean Time to Recovery (MTTR): This metric measures the average time taken to recover from a service outage or failure.
+- 95th Percentile Response Time: This metric measures the response time below which 95% of all requests are completed.
+- Error Rate: This metric measures the percentage of requests that result in an error (e.g., HTTP 5xx status codes).
+- Latency Distribution: This metric provides a detailed view of response times across different percentiles (e.g., 50th, 75th, 90th, 99th percentiles).
 
 ### Create a Dashboard to measure our SLIs
 
@@ -301,39 +273,26 @@ _TODO:_ Create a dashboard to measure the uptime of the frontend and backend ser
 
 The below Metrics command is used to create Uptime dashboard
 
-```
-
-sum(up{container=~"backend|frontend"}) by(pod)
-
-```
+`sum(up{container=~"backend|frontend"}) by(pod)`
 
 ## Report Error
 
 _TODO:_ Using the template below, write a trouble ticket for the developers, to explain the errors that we are seeing (400, 500, latency) and to let them know the file that is causing the issue.
 
 - TROUBLE TICKET
-  - Name:404 Not Found on backend service
-  - Date: 24-07-2024
-  - Subject: API endpoint not found
-  - Affected Area: Backend service
-  - Severity: HIGH
-  - Description: The calls from frontend to the backend are returning a 404
+  - Name: 500 Internal Server Error
+  - Date: 07-24-2024
+  - Subject: Internal Server Error
+  - Affected Area: The trial application
+  - Severity: High
+  - Description: The server encountered status 500 (Internal server error) and currently unable to complete request."
 
 ## Creating SLIs and SLOs
 
 _TODO:_ We want to create an SLO guaranteeing that our application has a 99.95% uptime per month. Name three SLIs that we would use to measure the success of this SLO.
 
-Here the SLOs is that our application has 99.95% uptime per month. To metigate this SLOs we need to take some SLI which ensue that this SLO.
-We will measure the "Four Golden Signals", for instance:
+To ensure our application meets a Service Level Objective (SLO) guaranteeing 99.95% uptime per month, we need to identify and measure specific Service Level Indicators (SLIs). Here are three SLIs that would be critical to measure the success of this SLO:
 
-1. Percentage of CPU and memory consumption in the last 1 month (for saturation).
-2. Percentage of Infrastructure uptime in the last 1 month (for error).
-3. The average number of requests per minute in the last 24 hours (for traffic).
-4. Percentage of request response time less than 250 milliseconds (for latency).
-   We also need some errors budget because all applications will not always work perfectly.
-5. Our application will produce 5xx status code less than 1% in a month
-6. Service downtime will be 0.001% in next month.
-
-```
-
-```
+1. Uptime Percentage: Directly indicates service availability, helping us ensure we meet the 99.95% uptime SLO.
+2. Mean Time to Recovery (MTTR): Indicates the efficiency of incident response, helping ensure quick recovery from outages.
+3. Number of Incidents: Provides insight into the frequency of service disruptions, highlighting stability issues.
