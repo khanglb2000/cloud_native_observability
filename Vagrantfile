@@ -35,4 +35,7 @@ Vagrant.configure("2") do |config|
     config.vm.provision "k3s shell script", type: "shell",
             path: "k3s.sh",
             args: args
+
+    # Share a folder between the host and guest
+    config.vm.synced_folder "D:/Workspace/udacity/cloud-native-app-architecture/Dashboard_Observability/manifests", "/home/vagrant/manifests"
 end
