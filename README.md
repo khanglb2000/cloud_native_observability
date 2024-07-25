@@ -298,6 +298,9 @@ _TODO:_ Using the template below, write a trouble ticket for the developers, to 
 
 _TODO:_ We want to create an SLO guaranteeing that our application has a 99.95% uptime per month. Name three SLIs that we would use to measure the success of this SLO.
 
+![Dashboard-1](answer-imgs/dashboard-prometheus-1.png)
+![Dashboard-2](answer-imgs/dashboard-prometheus-2.png)
+
 To ensure our application meets a Service Level Objective (SLO) guaranteeing 99.95% uptime per month, we need to identify and measure specific Service Level Indicators (SLIs). Here are three SLIs that would be critical to measure the success of this SLO:
 
 1. Uptime Percentage: Directly indicates service availability, helping us ensure we meet the 99.95% uptime SLO.
