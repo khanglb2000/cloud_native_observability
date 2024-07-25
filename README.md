@@ -245,15 +245,15 @@ _TODO:_ Describe, in own words, what the SLIs are, based on an SLO of _monthly u
 
 # SLO: Monthly Uptime
 
-- SLO Description: This SLO specifies the desired availability of a service over a month. For example, an SLO might state that the service should be available 99.9% of the time each month.
+- Description: This SLO specifies the desired availability of a service over a month. For example, an SLO might state that the service should be available 99.9% of the time each month.
 - Related SLI: The SLI for this SLO would be the percentage of uptime over the course of a month. It is calculated by measuring the total time the service was available and operational, divided by the total time in the month, multiplied by 100 to get a percentage.
 - Example SLI: If a service is up for 43,200 minutes out of 43,200 minutes in a 30-day month, the uptime SLI would be 100%. If it was up for 43,157 minutes, the uptime SLI would be approximately 99.9%.
 
 # SLO: Request Response Time
 
--SLO Description: This SLO defines the acceptable response time for requests made to the service. For example, an SLO might specify that 95% of requests should be served within 200 milliseconds.
--Related SLI: The SLI for this SLO would be the response time of requests. Specifically, it could be the 95th percentile response time, meaning the response time below which 95% of all requests fall.
--Example SLI: If over the course of a month, 95% of requests are completed in less than 200 milliseconds, then the service is meeting its response time SLO. The SLI would be the time (in milliseconds) that 95% of requests are completed within.
+- Description: This SLO defines the acceptable response time for requests made to the service. For example, an SLO might specify that 95% of requests should be served within 200 milliseconds.
+- Related SLI: The SLI for this SLO would be the response time of requests. Specifically, it could be the 95th percentile response time, meaning the response time below which 95% of all requests fall.
+- Example SLI: If over the course of a month, 95% of requests are completed in less than 200 milliseconds, then the service is meeting its response time SLO. The SLI would be the time (in milliseconds) that 95% of requests are completed within.
 
 ## Creating SLI metrics.
 
