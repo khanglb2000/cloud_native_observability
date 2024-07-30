@@ -3,11 +3,14 @@ import threading
 import requests
 import random
 import time
+import os
 from prometheus_flask_exporter import PrometheusMetrics
 import logging
 from jaeger_client import Config
 
 app = Flask(__name__)
+
+#https://github.com/rycus86/prometheus_flask_exporter#prometheus-flask-exporter
 metrics = PrometheusMetrics(app, group_by='endpoint')
 
 # static information as metric
@@ -23,7 +26,6 @@ by_endpoint_counter = metrics.counter(
     'by_endpoint_counter', 'Request count by request endpoint',
     labels={'endpoint': lambda: request.endpoint}
 )
-endpoints = ('error', 'foo', 'healthz')
 
 def init_tracer(service):
     logging.getLogger('').handlers = []
@@ -43,32 +45,29 @@ def init_tracer(service):
     # this call also sets opentracing.tracer
     return config.initialize_tracer()
 
-tracer = init_tracer('frontend')
+tracer = init_tracer('frontend-app')
 
-def random_endpoint():
-    while True:
-        try:
-            target = random.choice(endpoints)
-            requests.get("http://app:8081/%s" % target, timeout=1)
+endpoints = ('api', 'error_410', 'error_500', 'star', 'healthz')
 
-        except:
-            pass
+def gen_backend_events():
+    try:
+        target = random.choice(endpoints)
+        backend_service = os.environ.get('BACKEND_ENDPOINT', default="https://localhost:8081")
+        url_endpoint= f'{backend_service}/'+"%s" %target
+        backend_response = requests.get(url_endpoint, timeout=1)
+        return "OK"
+    except:
+        pass
 
 @app.route('/')
 @by_endpoint_counter
 def homepage():
+    with tracer.start_span('gen_backend_events') as span:
+        for _ in range(2):
+            gen_backend_events
+
     return render_template("main.html")
-    with tracer.start_span('random_endpoint') as span:
-        threading.Thread(target=random_endpoint).start()
-        for _ in range(4):
-            thread = threading.Thread(target=random_endpoint)
-            thread.daemon = True
-            thread.start()
-
-        while True:
-            time.sleep(1)
-    
-
+  
 
 @app.route('/healthz')
 @by_endpoint_counter

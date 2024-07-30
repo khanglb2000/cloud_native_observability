@@ -136,7 +136,7 @@ Great! We have installed Jaeger, Prometheus, and Grafana. We are now ready to wo
 - It is important to be able to log into Grafana, so let's look at how we can expose Grafana.
 - Run `kubectl get pod -n monitoring | grep grafana` and look for something named `promethus-grafana-########` where # are random characters.
 - copy `promethus-grafana-########` line.
-- Run `kubectl port-forward -n monitoring promethus-grafana-######## 3000`
+- Run `kubectl port-forward -n monitoring promethus-grafana-######## 3000 --address 0.0.0.0`
 - Grafana site can be accessed by `https://127.0.0.1:3000/` or `localhost:3000`
 - Log in with username and password.
 
@@ -155,7 +155,7 @@ password: prom-operator
 - Similar to Grafana, our frontend needs to be exposed to the internet. Be sure to open a new session in either a new terminal tab or terminal window so we can do another `kubectl port-forward`
 - Run the below command to expose the application
 
-`kubectl port-forward svc/frontend-service 8080:8080`
+`kubectl port-forward svc/frontend-service 8080:8080 --address 0.0.0.0`
 
 - In the web browser navigate to `localhost:8080`
 
@@ -235,35 +235,27 @@ echo -e "\n\n${ingress_name}.observability.svc.cluster.local:${ingress_port}"
 
 ### Describe SLO/SLI
 
-_TODO:_ Describe, in own words, what the SLIs are, based on an SLO of _monthly uptime_ and _request response time_.
+![Dashboard-1](answer-imgs/dashboard-prometheus-1.png)
+![Dashboard-2](answer-imgs/dashboard-prometheus-2.png)
 
-### SLI
+_TODO:_ Describe, in own words, what the SLIs are, based on an SLO of _monthly uptime_ and _request response time_.
 
 - Service Level Indicators (SLIs) are specific, quantifiable measurements used to assess the performance of a service. They provide objective data points that can be used to determine whether a service is meeting its Service Level Objectives (SLOs). SLIs are the metrics or key performance indicators (KPIs) that track the actual performance of various aspects of a service.
 
-### SLO
-
-# SLO: Monthly Uptime
-
-- Description: This SLO specifies the desired availability of a service over a month. For example, an SLO might state that the service should be available 99.9% of the time each month.
-- Related SLI: The SLI for this SLO would be the percentage of uptime over the course of a month. It is calculated by measuring the total time the service was available and operational, divided by the total time in the month, multiplied by 100 to get a percentage.
-- Example SLI: If a service is up for 43,200 minutes out of 43,200 minutes in a 30-day month, the uptime SLI would be 100%. If it was up for 43,157 minutes, the uptime SLI would be approximately 99.9%.
-
-# SLO: Request Response Time
-
-- Description: This SLO defines the acceptable response time for requests made to the service. For example, an SLO might specify that 95% of requests should be served within 200 milliseconds.
-- Related SLI: The SLI for this SLO would be the response time of requests. Specifically, it could be the 95th percentile response time, meaning the response time below which 95% of all requests fall.
-- Example SLI: If over the course of a month, 95% of requests are completed in less than 200 milliseconds, then the service is meeting its response time SLO. The SLI would be the time (in milliseconds) that 95% of requests are completed within.
-
-## Creating SLI metrics.
+# Suggested SLI to measure
 
 _TODO:_ It is important to know why we want to measure certain metrics for our customer. Describe in detail 5 metrics to measure these SLIs.
 
-- Uptime Percentage: This metric measures the percentage of time the service is available and operational over a specified period, typically a month.
-- Mean Time to Recovery (MTTR): This metric measures the average time taken to recover from a service outage or failure.
-- 95th Percentile Response Time: This metric measures the response time below which 95% of all requests are completed.
-- Error Rate: This metric measures the percentage of requests that result in an error (e.g., HTTP 5xx status codes).
-- Latency Distribution: This metric provides a detailed view of response times across different percentiles (e.g., 50th, 75th, 90th, 99th percentiles).
+- _CPU Utilization Percentage Over the Last Month:_ To monitor potential saturation issues.
+- _Memory Usage Over the Last Month:_ To detect any memory saturation.
+- _Infrastructure Uptime Percentage Over the Last Month:_ To assess error rates and ensure reliability.
+- _Average Requests Per Minute Over the Last 24 Hours:_ To gauge traffic levels and application load.
+- _Percentage of Requests with Response Time Under 250 Milliseconds:_ To monitor latency and performance.
+
+To account for occasional imperfections in the applications, we should establish an error budget:
+
+- _Keep 5xx Error Responses Below 1%:_ Ensure that the applications generate less than 1% of 5xx status code responses over the next month.
+- _Limit Service Downtime to 0.01%:_ Ensure that the total service downtime does not exceed 0.01% over the next month.
 
 ## Create a Dashboard to measure our SLIs
 
@@ -282,31 +274,66 @@ sum(rate(http_requests_total{job="frontend", status=~"5.."}[1m]))
 sum(rate(http_requests_total{job="backend", status=~"5.."}[1m]))
 ```
 
-# Report Error
+## Building KPIs for our plan
+
+Now that we have our SLIs and SLOs, create KPIs to accurately measure these metrics. We will make a dashboard for this, but first write them down here.
+
+To achieve our SLO, would collect KPIs everyday
+
+# Uptime KPI
+
+Uptime should be around 99% over a month, with response times targeting approximately 250 milliseconds.
+
+- Application uptime should exceed 99.5%.
+- More than 99% of requests should be completed in under 250 milliseconds.
+
+# Traffic KPI
+
+This metric assesses the demand on your system, specifically measuring response times for successful requests.
+
+- Monitor the average response time for successful requests in 30-second intervals over the last 3 hours.
+
+# Saturation KPI
+
+This metric gauges how "full" your service is by focusing on the most constrained resources, such as memory or I/O. Systems often start to degrade in performance before reaching 100% utilization, so setting utilization targets is crucial.
+
+- CPU usage should remain below 85%.
+- Memory usage should stay under 85%.
+
+# Error KPI
+
+This measures the rate of failed requests, including explicit failures (e.g., HTTP 500 errors) and implicit issues (e.g., HTTP 200 responses with incorrect messages).
+
+- Track the rate of errors (excluding HTTP 200) per second over the last 3 hours.
+- Measure the rate of successful requests (HTTP 200) per second over the last 3 hours.
+
+## Report Error
 
 _TODO:_ Using the template below, write a trouble ticket for the developers, to explain the errors that we are seeing (400, 500, latency) and to let them know the file that is causing the issue.
 
 - TROUBLE TICKET
-  - Name: 500 Internal Server Error
-  - Date: 07-24-2024
-  - Subject: Internal Server Error
-  - Affected Area: The application
+  - Name: 405 Method Not Allowed
+  - Date: 07-24-2024, 14:10:17
+  - Subject: Request to "/star" endpoint failure
+  - Affected Area: Line 103 in "./reference-app/backend/app.py"
   - Severity: High
-  - Description: The server encountered status 500 (Internal server error) and currently unable to complete request.
+  - Description: When client made a request to "/star" endpoint, the server responded with status 405 Method Not Allowed. Please check database connection settings.
 
-# Creating SLIs and SLOs
+## Creating SLIs and SLOs Dashboard
 
 _TODO:_ We want to create an SLO guaranteeing that our application has a 99.95% uptime per month. Name three SLIs that we would use to measure the success of this SLO.
 
-![Dashboard-1](answer-imgs/dashboard-prometheus-1.png)
-![Dashboard-2](answer-imgs/dashboard-prometheus-2.png)
+![M-Dashboard-1](answer-imgs/metric-db-1.png.png)
+![M-Dashboard-2](answer-imgs/metric-db-2.png.png)
 
 To ensure our application meets a Service Level Objective (SLO) guaranteeing 99.95% uptime per month, we need to identify and measure specific Service Level Indicators (SLIs). Here are three SLIs that would be critical to measure the success of this SLO:
 
-1. Uptime Percentage: Directly indicates service availability, helping us ensure we meet the 99.95% uptime SLO.
-2. Mean Time to Recovery (MTTR): Indicates the efficiency of incident response, helping ensure quick recovery from outages.
-3. Number of Incidents: Provides insight into the frequency of service disruptions, highlighting stability issues.
-4. Average Number of Requests per Minute (for traffic): Helps in capacity planning and understanding traffic patterns to optimize performance.
-5. Percentage of Request Response Time < 250ms (for latency): Ensures that the application is responsive and meets performance expectations.
-6. Application Producing 5xx Status Codes < 1% (for reliability): Helps identify and fix server-side issues that impact user experience.
-7. Service Downtime < 0.001% (for availability): Drives efforts to minimize downtime through redundancy, robust architecture, and proactive monitoring.
+1. CPU Usage: The CPU consumption of the Flask backend application, measured over 30-second intervals.
+2. Memory Usage: The memory consumption of the Flask backend application.
+3. Uptime: The availability or uptime of each pod.
+4. 40X HTTP Errors: The frequency of HTTP 40X error codes.
+5. 50X HTTP Errors: The frequency of HTTP 50X error codes.
+6. Errors Per Second: The rate of failed responses (excluding HTTP 200) per second.
+7. Successful Requests Per Second: The rate of successful requests to the Flask application per second.
+8. Average Response Time [30s]: The average time taken to respond to successful requests, measured over 30-second intervals.
+9. Requests Under 250ms: The percentage of successful requests completed within 250 milliseconds.

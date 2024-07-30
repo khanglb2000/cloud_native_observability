@@ -6,15 +6,16 @@ from flask_pymongo import PyMongo
 from prometheus_flask_exporter import PrometheusMetrics
 from jaeger_client import Config
 import logging
-from os import getenv
 
 app = Flask(__name__)
 
 app.config['MONGO_DBNAME'] = 'example-mongodb'
 app.config['MONGO_URI'] = 'mongodb://example-mongodb-svc.default.svc.cluster.local:27017/example-mongodb'
 
+#https://github.com/rycus86/prometheus_flask_exporter#prometheus-flask-exporter
 mongo = PyMongo(app)
-metrics = PrometheusMetrics(app, group_by='endpoint')
+metrics = PrometheusMetrics(app, group_by='endpoint') # by endpoint
+
 
 # static information as metric
 metrics.info('app_info', 'Application info', version='1.0.3')
@@ -30,11 +31,8 @@ by_endpoint_counter = metrics.counter(
     labels={'endpoint': lambda: request.endpoint}
 )
 
-JAEGER_AGENT_HOST = getenv('JAEGER_AGENT_HOST', 'localhost')
-
 class InvalidHandle(Exception):
     status_code = 400
-
     def __init__(self, message, status_code=None, payload=None):
         Exception.__init__(self)
         self.message = message
@@ -47,11 +45,6 @@ class InvalidHandle(Exception):
         error_message['message'] = self.message
         return error_message
 
-@app.route('/error')
-@by_endpoint_counter
-def oops():
-    return ':(', 500
-
 def init_tracer(service):
     logging.getLogger('').handlers = []
     logging.basicConfig(format='%(message)s', level=logging.DEBUG)
@@ -63,7 +56,6 @@ def init_tracer(service):
                 'param': 1,
             },
             'logging': True,
-            'local_agent': {'reporting_host': JAEGER_AGENT_HOST},
         },
         service_name=service,
     )
@@ -71,7 +63,8 @@ def init_tracer(service):
     # this call also sets opentracing.tracer
     return config.initialize_tracer()
 
-tracer = init_tracer('backend')
+
+tracer = init_tracer('backend_app')
 
 @app.errorhandler(InvalidHandle)
 def handle_invalid_usage(error):
@@ -79,10 +72,18 @@ def handle_invalid_usage(error):
     response.status_code = error.status_code
     return response
 
-@app.route('/foo')
+
+@app.route('/error_410')
 @by_endpoint_counter
-def get_error():
-    raise InvalidHandle('error occur', status_code=410)
+def get_error_410():
+    raise InvalidHandle('error_410', status_code=410)
+
+
+@app.route('/error_500')
+@by_endpoint_counter
+def get_error_500():
+    raise InvalidHandle('error_500', status_code=500)
+    
 
 @app.route('/')
 @by_endpoint_counter
@@ -90,14 +91,15 @@ def homepage():
     with tracer.start_span('hello-world'):
         return "Hello World"
 
+
 @app.route('/api')
 @by_endpoint_counter
 def my_api():
     with tracer.start_span('api'):
-        answer = "something"
-    return jsonify(repsonse=answer)
+        api_info = "To get API info"
+    return jsonify(repsonse=api_info)
 
-# This will return 405 error
+
 @app.route('/star', methods=['POST'])
 @by_endpoint_counter
 def add_star():
@@ -108,6 +110,7 @@ def add_star():
     new_star = star.find_one({'_id': star_id })
     output = {'name' : new_star['name'], 'distance' : new_star['distance']}
     return jsonify({'result' : output})
+
 
 @app.route('/healthz')
 @by_endpoint_counter
