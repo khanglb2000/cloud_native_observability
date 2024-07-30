@@ -323,8 +323,8 @@ _TODO:_ Using the template below, write a trouble ticket for the developers, to 
 
 _TODO:_ We want to create an SLO guaranteeing that our application has a 99.95% uptime per month. Name three SLIs that we would use to measure the success of this SLO.
 
-![M-Dashboard-1](answer-imgs/metric-db-1.png.png)
-![M-Dashboard-2](answer-imgs/metric-db-2.png.png)
+![M-Dashboard-1](answer-imgs/metric-db-1.png)
+![M-Dashboard-2](answer-imgs/metric-db-2.png)
 
 To ensure our application meets a Service Level Objective (SLO) guaranteeing 99.95% uptime per month, we need to identify and measure specific Service Level Indicators (SLIs). Here are three SLIs that would be critical to measure the success of this SLO:
 
